@@ -1,41 +1,45 @@
 import json
 import requests
 from http.server import BaseHTTPRequestHandler, HTTPServer
-import urllib.parse
-
-
-def send_sse(self, data):
-    self.wfile.write(f"data: {data}\n\n".encode("utf-8"))
-    self.wfile.flush()
 
 
 class IntermediateHandler(BaseHTTPRequestHandler):
-    def _set_headers(self, content_type="application/json"):
-        self.send_header("Content-Type", content_type)
-        self.send_header("Access-Control-Allow-Origin", "*")
+    def _set_headers(self):
+        self.send_header("Content-Type", "application/json")
+        self.send_header("Access-Control-Allow-Origin", "*")  # Allow all origins
         self.send_header("Access-Control-Allow-Headers", "Content-Type")
-        self.send_header("Access-Control-Allow-Methods", "GET, POST, OPTIONS")
+        self.send_header("Access-Control-Allow-Methods", "POST, OPTIONS")
 
     def do_OPTIONS(self):
         self.send_response(200)
         self._set_headers()
         self.end_headers()
 
-    def do_GET(self):
-        parsed_path = urllib.parse.urlparse(self.path)
-        if parsed_path.path == "/chat":
-            self.send_response(200)
-            self._set_headers("text/event-stream")
-            self.end_headers()
-
+    def do_POST(self):
+        if self.path == "/chat":
+            content_length = int(self.headers["Content-Length"])
+            post_data = self.rfile.read(content_length)
+            data = json.loads(post_data)
             url = "http://localhost:11434/api/chat"
+
             payload = {
-                "model": "gemma3:1b",
-                "messages": [{"role": "user", "content": "Hi"}],
+                "model": "gemma3:1b",  # Replace with your model
+                "messages": [
+                    {"role": "user", "content": data.get("prompt", "What is Python?")}
+                ],
             }
 
             try:
-                ollama_response = requests.post(url, json=payload, stream=True)
+                self.send_response(200)
+                self._set_headers()
+                self.end_headers()
+
+                ollama_response = requests.post(
+                    url,
+                    json=payload,
+                    stream=True,
+                )
+
                 for line in ollama_response.iter_lines(decode_unicode=True):
                     if line:
                         try:
@@ -45,12 +49,16 @@ class IntermediateHandler(BaseHTTPRequestHandler):
                                 and "content" in json_data["message"]
                             ):
                                 content = json_data["message"]["content"]
-                                send_sse(self, content)
+                                self.wfile.write(content.encode("utf-8"))
+                                self.wfile.flush()  # 🧠 push immediately
                         except json.JSONDecodeError:
-                            send_sse(self, "[Error decoding response]")
-                send_sse(self, "[DONE]")
+                            pass
+
             except Exception as e:
-                send_sse(self, f"[Server error: {str(e)}]")
+                self.send_response(500)
+                self._set_headers()
+                self.end_headers()
+                self.wfile.write(json.dumps({"error": str(e)}).encode("utf-8"))
         else:
             self.send_response(404)
             self._set_headers()
