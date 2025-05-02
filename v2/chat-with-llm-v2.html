@@ -74,7 +74,7 @@
 
         }
 
-        input {
+        textarea {
             flex: 1;
             padding: 10px;
             font-size: 16px;
@@ -106,14 +106,34 @@
          id="chatBox"></div>
 
     <div class="input-area">
-        <input type="text"
-               id="userInput"
-               placeholder="Ask anything..."
-               onkeydown="if(event.key === 'Enter') startChat()" />
+        <textarea type="text"
+                  id="userInput"
+                  placeholder="Ask anything..."
+                  onkeydown="handleKeyDown(event)"></textarea>
         <button onclick="startChat()">Send</button>
     </div>
+    <script>
+        fetch("http://localhost:5001/clear-session", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({
+                user_id: "user",
+                prompt: "clear"
+            }),
+        })
+            .then(res => res.json())
+            .then(console.log);
+
+    </script>
 
     <script>
+
+        function handleKeyDown(event) {
+            if (event.key === 'Enter' && !event.shiftKey) {
+                event.preventDefault(); // prevent newline
+                startChat(); // call your send function
+            }
+        }
         const chatBox = document.getElementById("chatBox");
 
         function addMessage(text, sender) {
@@ -164,7 +184,10 @@
                 const response = await fetch("http://localhost:5001/chat", {
                     method: "POST",
                     headers: { "Content-Type": "application/json" },
-                    body: JSON.stringify({ prompt: userText }),
+                    body: JSON.stringify({
+                        user_id: "user",
+                        prompt: userText
+                    }),
                 });
                 console.log({ response });
 
