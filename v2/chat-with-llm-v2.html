@@ -127,6 +127,45 @@
     </script>
 
     <script>
+        function renderFinalMarkdown(container, markdownText) {
+            container.innerHTML = marked.parse(markdownText);
+            hljs.highlightAll();
+
+            const codeBlocks = container.querySelectorAll("pre code");
+
+            codeBlocks.forEach((codeBlock) => {
+                const pre = codeBlock.parentElement;
+
+                // Create copy button
+                const button = document.createElement("button");
+                button.textContent = "Copy";
+                button.style.position = "absolute";
+                button.style.top = "8px";
+                button.style.right = "8px";
+                button.style.padding = "5px 10px";
+                button.style.fontSize = "12px";
+                button.style.background = "#2aaafa";
+                button.style.color = "white";
+                button.style.border = "none";
+                button.style.borderRadius = "4px";
+                button.style.cursor = "pointer";
+
+                // Create a wrapper for relative positioning
+                const wrapper = document.createElement("div");
+                wrapper.style.position = "relative";
+                wrapper.appendChild(button);
+                wrapper.appendChild(pre.cloneNode(true));
+                pre.replaceWith(wrapper);
+
+                button.addEventListener("click", () => {
+                    navigator.clipboard.writeText(codeBlock.textContent).then(() => {
+                        button.textContent = "Copied!";
+                        setTimeout(() => (button.textContent = "Copy"), 1500);
+                    });
+                });
+            });
+        }
+
 
         function handleKeyDown(event) {
             if (event.key === 'Enter' && !event.shiftKey) {
@@ -164,10 +203,10 @@
             return { container: div, content: span };
         }
 
-        function renderFinalMarkdown(container, markdownText) {
-            container.innerHTML = marked.parse(markdownText);
-            hljs.highlightAll();
-        }
+        // function renderFinalMarkdown(container, markdownText) {
+        //     container.innerHTML = marked.parse(markdownText);
+        //     hljs.highlightAll();
+        // }
 
         async function startChat() {
             const input = document.getElementById("userInput");
@@ -202,10 +241,12 @@
                     fullMarkdown += chunk;
                     content.textContent += chunk;
                     chatBox.scrollTop = chatBox.scrollHeight;
+                    renderFinalMarkdown(container, fullMarkdown);
+
                 }
 
-                // After stream ends: render final markdown
-                renderFinalMarkdown(container, fullMarkdown);
+                // renderFinalMarkdown(container, fullMarkdown);                // After stream ends: render final markdown
+
             } catch (error) {
                 content.textContent = "⚠️ Error: " + error.message;
             }
