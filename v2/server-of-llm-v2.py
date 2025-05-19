@@ -52,7 +52,8 @@ class IntermediateHandler(BaseHTTPRequestHandler):
 
         print("\033[34m" + f"Text=>{session_memory}" + "\033[0m", session_memory)
         payload = {
-            "model": "gemma3:1b",  # Replace with your model
+            # "model": "gemma3:1b",  # Replace with your model
+            "model": "deepseek-r1:1.5b",  # Replace with your model
             "messages": session_memory[session_id],
         }
 
@@ -68,6 +69,7 @@ class IntermediateHandler(BaseHTTPRequestHandler):
             )
 
             full_response = ""
+            print(ollama_response)
 
             for line in ollama_response.iter_lines(decode_unicode=True):
                 if line:
