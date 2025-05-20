@@ -2,13 +2,6 @@
 
 This project demonstrates how to use the local [Ollama](https://ollama.com) API to interact with an AI model via Python. It includes instructions to install the necessary tools, download a model, and run a sample chat script.
 
-## Prerequisites
-
-- Python 3.7+
-- pip (Python package installer)
-- Internet connection (to download the model)
-- [Ollama](https://ollama.com) installed and running locally
-
 ## Step 1: Install Ollama
 
 Download and install Ollama from the official site:
@@ -51,7 +44,14 @@ Install packages mentioned in project's requirements.txt file
 ```
   pip install -r requirements.txt
 ```
-## Step 3: Run and Enjoy
+## Step 3: Run and Chat
+#### serve frontend 
+Open the directory on any browser or use *Live Server* vs code extentiion
+
+#### serve backend 
+
+```
+python v2/chat-with-llm-v2.py
 ```
 python v1/chat-with-llm.py
 ```
